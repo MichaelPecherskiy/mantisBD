@@ -1,16 +1,16 @@
-from model.project import Project
+from fixture.project import Project
 import random
 
 
-def test_delete_project(app):
-    app.session.login("administrator", "root")
-    if len(app.project.get_list()) == 0:
-        app.project.create(Project(name="name"))
-    old_projects = app.project.get_list()
-    project = random.choice(old_projects)
-    app.project.delete_project_by_id(project.id)
-    new_projects = app.project.get_list_new()
-    print(new_projects)
-    assert len(old_projects) - 1 == len(new_projects)
-    old_projects.remove(project)
-    assert sorted(old_projects, key=Project.id_or_max) == sorted(new_projects, key=Project.id_or_max)
+def test_delete_project(app, db):
+    if db.count_projects() == 0:
+        app.project.create(Project(name=("Project %s" % random.randrange(1, 100)), description="description1"))
+
+    old_project_list = app.soap.get_projects_name_list()
+    project_name = random.choice(old_project_list)
+    app.project.delete_project_by_name(project_name)
+    new_project_list = app.soap.get_projects_name_list()
+    assert len(old_project_list) - 1 == db.count_projects()
+    old_project_list.remove(project_name)
+    assert sorted(old_project_list) == sorted(new_project_list)
+
